@@ -55,8 +55,8 @@ def deterministic_solve(LEP):
 
     LEP.project_phi()
 
-    print("Phi_n as Vector:", LEP.phi_next.vector()[:])
-    print("Länge von Phi:", len(LEP.phi_next.vector()[:]))
+    #print("Phi_n as Vector:", LEP.phi_next.vector()[:])
+    #print("Länge von Phi:", len(LEP.phi_next.vector()[:]))
 
     J_eps = LEP.J_eps(LEP.u_n, LEP.phi_n[0])
 
@@ -183,8 +183,8 @@ def monte_carlo_solve(LEP):
     LEP.project_phi()
 
 
-    print("Phi_n as Vector:", LEP.phi_next.vector()[:])
-    print("Länge von Phi:", len(LEP.phi_next.vector()[:]))
+    #print("Phi_n as Vector:", LEP.phi_next.vector()[:])
+    #print("Länge von Phi:", len(LEP.phi_next.vector()[:]))
 
 def LE_optimzation(problem, tau_adapter, maxIteration=500, plot_parameters=True, plot_steps=True, stoch=True, plot_every=10):
     ConvergenceIndicator = False
@@ -204,6 +204,8 @@ def LE_optimzation(problem, tau_adapter, maxIteration=500, plot_parameters=True,
 
     IterationStep = 0
     iter_step_for_plot = 98
+    mesh_count = 1
+    conv_min_iter = 50
 
     if problem.stochastic and stoch:
         problem.sample(0)
@@ -277,8 +279,12 @@ def LE_optimzation(problem, tau_adapter, maxIteration=500, plot_parameters=True,
         else:
             NewMeshIndicator, new_mesh = mesh_adapter.update(problem.phi_next, problem.u_n, controls[-1], problem.mesh)
 
+        conv_min_iter += 1
         if NewMeshIndicator:
-            problem.updateMesh(new_mesh)
+            mesh_count += 1
+            conv_min_iter = 0
+            LEP.updateMesh(new_mesh)
+            control = 1000
 
             if plot_steps:
                 plt.figure()
@@ -299,9 +305,9 @@ def LE_optimzation(problem, tau_adapter, maxIteration=500, plot_parameters=True,
         EndTime = tm.time()
         times.append(EndTime - StartTime)
         if IterationStep >= maxIteration:
+
             print("reach iteration limit")
             ConvergenceIndicator = True
-
 
             if plot_parameters:
                 fig, ((ax1, ax2), (ax3, ax4)) = plt.subplots(2, 2)
@@ -316,12 +322,34 @@ def LE_optimzation(problem, tau_adapter, maxIteration=500, plot_parameters=True,
                 plt.show()
                 #plt.savefig('opti_plots/matriken.png')
 
+
+        if control < 1 and conv_min_iter >= 50 and mesh_count >= 4:  # Kovergenz
+            ConvergenceIndicator = True
+            tac()
+            print("converge")
+            print("J=", Js[-1])
+            print("complince:", compliance(LEP))
+
+            if plot_parameters:
+                fig, ((ax1, ax2), (ax3, ax4)) = plt.subplots(2, 2)
+                ax1.plot(iters, taus[1:])
+                ax1.set_title("τ per iteration")
+                ax3.plot(iters, gammas)
+                ax3.set_title("γ per iteration")
+                ax2.plot(iters, times)
+                ax2.set_title("computing time per iteration")
+                ax4.plot(iters, Js)
+                ax4.set_title("J^eps(φ) per iteration")
+                plt.show()
+                #plt.savefig('opti_plots/matriken.png')
+
+
     return taus, es, es_t, times, controls, gammas, Js, compliance_list, t_list, problem
 
 
 if __name__ == '__main__':
     tic()
-    taus, es, es_t, times, controls, gammas, Js, compliance_list, t_list, problem = LE_optimzation(problem=LEP, tau_adapter=tau_adapter, maxIteration=5, plot_parameters=True, plot_steps=False, stoch=False, plot_every=100)
+    taus, es, es_t, times, controls, gammas, Js, compliance_list, t_list, problem = LE_optimzation(problem=LEP, tau_adapter=tau_adapter, maxIteration=750, plot_parameters=True, plot_steps=False, stoch=False, plot_every=100)
     tac()
 
     print("J=", Js[-1])

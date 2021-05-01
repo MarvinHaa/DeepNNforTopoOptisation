@@ -278,7 +278,8 @@ def run_CNN_optimization(model_path='Neural_Networks/CNN/model/CNN-model_3_15_15
         if control < 1 and conv_min_iter >= 50 and mesh_count >= 4:  # Kovergenz
             converge = True
             tac()
-
+            print("J=", Js[-1])
+            print("complince:", compliance(LEP))
 
 
 
