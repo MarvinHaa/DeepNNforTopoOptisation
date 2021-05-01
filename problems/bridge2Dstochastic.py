@@ -56,7 +56,7 @@ def bridge2Dstochastic():
                  "mu": Constant(150),
                  "m": Constant(0.4),
                  "dim": 2,
-                 "nSamples": 9,
+                 "nSamples": 224,
                  "gamma": Constant(1),
                  "gammaAdaptFactor": Constant(0.01), # 0.1 for Beta > 0
                  "epsilon": Constant(1. / 16),
