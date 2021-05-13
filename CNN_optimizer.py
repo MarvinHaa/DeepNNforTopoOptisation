@@ -47,7 +47,9 @@ def tac():
     (t_min, t_sec) = divmod(t_sec,60)
     (t_hour,t_min) = divmod(t_min,60)
     print('Time passed: {}hour:{}min:{}sec'.format(t_hour,t_min,t_sec))
-
+    return 'Time passed: {}hour:{}min:{}sec'.format(t_hour,t_min,t_sec)
+    
+    
 def NN_gradienten_step(LEP,model):
     """
     calculates a gradient step with a CNN
@@ -168,24 +170,13 @@ def get_random_g(LEP, iter=None):
 
 
     expr.theta = stats.truncnorm((-pi/2 )/0.3, (pi/2 )/ 0.3, loc=0, scale=0.3 ).rvs(size=1,random_state=iter)[0]
-    a = expr(0)[0]
-    b = expr(0)[1]
-    origin = [0], [0]
-    #a, b = stats.uniform(loc=-1, scale=2).rvs(size=1)[0]
-    plt.quiver(*origin, a, b)
-    plt.title(str(iter)+'_('+str(a)+','+str(b)+')')
-    plt.show()
 
     LEP.g = expr
-    return LEP
+    return '('+str(expr(0)[0])+','+str(expr(0)[1])+')'
 
 
-def run_CNN_optimization(model_path='Neural_Networks/CNN/model/CNN-model_3_15_15_15_15_15_1_one_step_77_Batch_100_epoch.pth',random_state=0):
+def run_CNN_optimization(LEP,model_path='Neural_Networks/CNN/model/CNN-model_3_15_15_15_15_15_1_one_step_77_Batch_100_epoch.pth',random_state=0):
     converge = False
-    LEP = LEProblem(bridge2Dstochastic())
-
-    if random_state > 0:
-        get_random_g(LEP, random_state)
 
     tau_adapter = tauadaptor(LEP.get_tau())
     mesh_adapter = meshadaptor(mesh_0=LEP.mesh, CVaR=LEP.CVaR)
@@ -275,14 +266,28 @@ def run_CNN_optimization(model_path='Neural_Networks/CNN/model/CNN-model_3_15_15
         k += 1
         EndTime = tm.time()
         times.append(EndTime - StartTime)
+     
         if control < 1 and conv_min_iter >= 50 and mesh_count >= 4:  # Kovergenz
             converge = True
             tac()
             print("J=", Js[-1])
             print("complince:", compliance(LEP))
+            
+            # plot metriks
+            fig, ((ax1, ax2), (ax3, ax4)) = plt.subplots(2, 2)
+            ax1.plot(iters, taus[1:])
+            ax1.set_title("τ per iteration")
+            ax3.plot(iters, gammas)
+            ax3.set_title("γ per iteration")
+            ax2.plot(iters, times)
+            ax2.set_title("computing time per iteration")
+            ax4.plot(iters, Js)
+            ax4.set_title("J^eps(φ) per iteration")
+            plt.show()
 
-
+    return Js
 
 
 if __name__ == '__main__':
-    run_CNN_optimization()
+    LEP = LEProblem(bridge2D())
+    run_CNN_optimization(LEP)

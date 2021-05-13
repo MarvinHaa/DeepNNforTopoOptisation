@@ -34,6 +34,19 @@ def tac():
     (t_min, t_sec) = divmod(t_sec,60)
     (t_hour,t_min) = divmod(t_min,60)
     print('Time passed: {}hour:{}min:{}sec'.format(t_hour,t_min,t_sec))
+    return 'Time passed: {}hour:{}min:{}sec'.format(t_hour,t_min,t_sec)
+
+def get_random_g(LEP, iter=None):
+
+    expr = Expression( ( "1.0" + " * (cos( theta ) * meanX - sin( theta ) *meanY)",
+                         "1.0" + " * (sin( theta ) * meanX + cos( theta ) * meanY)" ),
+                         meanX = 0, meanY = -5000, theta = 0.0, degree = 1 )
+
+
+    expr.theta = stats.truncnorm((-pi/2 )/0.3, (pi/2 )/ 0.3, loc=0, scale=0.3 ).rvs(size=1,random_state=iter)[0]
+
+    LEP.g = expr
+    return '('+str(expr(0)[0])+','+str(expr(0)[1])+')', expr
 
 
 def deterministic_solve(LEP):
@@ -182,9 +195,6 @@ def monte_carlo_solve(LEP):
 
     LEP.project_phi()
 
-
-    #print("Phi_n as Vector:", LEP.phi_next.vector()[:])
-    #print("Länge von Phi:", len(LEP.phi_next.vector()[:]))
 
 def LE_optimzation(problem, tau_adapter, maxIteration=500, plot_parameters=True, plot_steps=True, stoch=True, plot_every=10):
     ConvergenceIndicator = False
